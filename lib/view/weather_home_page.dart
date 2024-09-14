@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import '../model/weather_forecast.dart';
 
 class WeatherHomePage extends StatefulWidget {
@@ -36,30 +36,23 @@ class _WeatherHomePageState extends State<WeatherHomePage> {
     }
   }
 
-  // Convierte el `initTime` en una fecha y le suma el `timepoint` para obtener la hora exacta del pronóstico
   String getFormattedHour(String? initTime, int timepoint) {
     if (initTime == null) return 'N/A';
 
-    // Parseamos la fecha de inicio del pronóstico
     final year = int.parse(initTime.substring(0, 4));
     final month = int.parse(initTime.substring(4, 6));
     final day = int.parse(initTime.substring(6, 8));
     final hour = int.parse(initTime.substring(8, 10));
 
-    // Creamos un DateTime con la fecha y hora de inicio
     final initDateTime = DateTime(year, month, day, hour);
-
-    // Sumamos el `timepoint` (que está en horas) a la fecha de inicio
     final forecastDateTime = initDateTime.add(Duration(hours: timepoint));
 
-    // Devolvemos la hora formateada
-    return DateFormat('HH:mm', 'es_ES').format(forecastDateTime);
+    return DateFormat('HH:mm').format(forecastDateTime);
   }
 
   String getFormattedDay(String? initTime, int timepoint) {
     if (initTime == null) return 'N/A';
 
-    // Parseamos la fecha de inicio y sumamos el `timepoint`
     final year = int.parse(initTime.substring(0, 4));
     final month = int.parse(initTime.substring(4, 6));
     final day = int.parse(initTime.substring(6, 8));
@@ -67,8 +60,7 @@ class _WeatherHomePageState extends State<WeatherHomePage> {
     final initDateTime = DateTime(year, month, day, hour);
     final forecastDateTime = initDateTime.add(Duration(hours: timepoint));
 
-    // Devolvemos el día formateado
-    return DateFormat('EEEE, MMM d', 'es_ES').format(forecastDateTime);
+    return DateFormat('EEEE, MMM d').format(forecastDateTime);
   }
 
   String getWeatherIcon(String precType) {
@@ -93,7 +85,15 @@ class _WeatherHomePageState extends State<WeatherHomePage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$icon $day $hour - Temp: $temp, Wind: $wind'),
+        content: Row(
+          children: [
+            Text('$icon $day - '),
+            Icon(Icons.thermostat, color: Colors.white),
+            Text(' $temp - '),
+            Icon(Icons.air, color: Colors.white,),
+            Text(' $wind'),
+          ],
+        ),
       ),
     );
   }
@@ -116,7 +116,7 @@ class _WeatherHomePageState extends State<WeatherHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Tiempo en A Coruña'),
+        title: Text('Weather in A Coruña'),
         actions: [
           IconButton(
             icon: Icon(Icons.error),
@@ -147,10 +147,9 @@ class _WeatherHomePageState extends State<WeatherHomePage> {
                   Icon(Icons.error, color: Colors.red, size: 100),
                   SizedBox(height: 20),
                   Text(
-                    'Error obteniendo datos',
+                    'Error fetching forecast',
                     style: TextStyle(
                       fontSize: 24, // Larger font size
-                      fontWeight: FontWeight.bold, // Bold text
                     ),
                   ),
                   SizedBox(height: 20), // Add margin to the top of the button
@@ -164,7 +163,7 @@ class _WeatherHomePageState extends State<WeatherHomePage> {
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Padding
                       textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold), // Text style
                     ),
-                    child: Text('Reintentar'),
+                    child: Text('Retry'),
                   ),
                 ],
               ),
