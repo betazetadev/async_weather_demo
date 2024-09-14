@@ -1,9 +1,13 @@
+import 'package:async_weather_demo/widget/error_display.dart';
+import 'package:async_weather_demo/widget/weather_header.dart';
+import 'package:async_weather_demo/widget/weather_list.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import '../model/weather_forecast.dart';
+import '../util/weather_utils.dart';
 
 class WeatherHomePage extends StatefulWidget {
   @override
@@ -27,27 +31,13 @@ class _WeatherHomePageState extends State<WeatherHomePage> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       initTime =
-          data['init']; // Guardamos el init (fecha de inicio del pronóstico)
+      data['init']; // Guardamos el init (fecha de inicio del pronóstico)
       return (data['dataseries'] as List)
           .map((json) => WeatherForecast.fromJson(json))
           .toList();
     } else {
       throw Exception('Failed to load weather data');
     }
-  }
-
-  String getFormattedHour(String? initTime, int timepoint) {
-    if (initTime == null) return 'N/A';
-
-    final year = int.parse(initTime.substring(0, 4));
-    final month = int.parse(initTime.substring(4, 6));
-    final day = int.parse(initTime.substring(6, 8));
-    final hour = int.parse(initTime.substring(8, 10));
-
-    final initDateTime = DateTime(year, month, day, hour);
-    final forecastDateTime = initDateTime.add(Duration(hours: timepoint));
-
-    return DateFormat('HH:mm').format(forecastDateTime);
   }
 
   String getFormattedDay(String? initTime, int timepoint) {
@@ -63,23 +53,9 @@ class _WeatherHomePageState extends State<WeatherHomePage> {
     return DateFormat('EEEE, MMM d').format(forecastDateTime);
   }
 
-  String getWeatherIcon(String precType) {
-    switch (precType) {
-      case 'rain':
-        return '🌧️';
-      case 'snow':
-        return '❄️';
-      case 'none':
-        return '☀️';
-      default:
-        return '🌥️';
-    }
-  }
-
   void onForecastTap(WeatherForecast forecast) {
     final icon = getWeatherIcon(forecast.precType ?? '');
     final day = getFormattedDay(initTime, forecast.timepoint ?? 0);
-    final hour = getFormattedHour(initTime, forecast.timepoint ?? 0);
     final temp = '${forecast.temp2m}°C';
     final wind = '${forecast.windDirection} ${forecast.windSpeed} m/s';
 
@@ -138,118 +114,23 @@ class _WeatherHomePageState extends State<WeatherHomePage> {
         future: fetchWeatherData(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error, color: Colors.red, size: 100),
-                  SizedBox(height: 20),
-                  Text(
-                    'Error fetching forecast',
-                    style: TextStyle(
-                      fontSize: 24, // Larger font size
-                    ),
-                  ),
-                  SizedBox(height: 20), // Add margin to the top of the button
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _forceError = false;
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Padding
-                      textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold), // Text style
-                    ),
-                    child: Text('Retry'),
-                  ),
-                ],
-              ),
-            );
+            return ErrorDisplay(onRetry: () {
+              setState(() {
+                _forceError = !_forceError;
+              });
+            });
           } else if (snapshot.hasData) {
             final forecastData = snapshot.data!;
             final groupedForecasts = groupForecastsByDay(forecastData);
             return Column(
               children: [
-                Container(
-                  padding: EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      Text(
-                        '${forecastData[0].temp2m}°C',
-                        style: TextStyle(
-                            fontSize: 80, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        getWeatherIcon(forecastData[0].precType ?? ''),
-                        style: TextStyle(fontSize: 100),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: ListView(
-                    children: groupedForecasts.keys.map((day) {
-                      final forecastsForDay = groupedForecasts[day]!;
-
-                      return Card(
-                        margin: EdgeInsets.all(10),
-                        child: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Título con el día
-                              Text(
-                                day,
-                                style: TextStyle(
-                                    fontSize: 24, fontWeight: FontWeight.bold),
-                              ),
-                              Divider(),
-                              Column(
-                                children: forecastsForDay.map((forecast) {
-                                  return ListTile(
-                                    leading: Text(
-                                      getWeatherIcon(forecast.precType ?? ''),
-                                      style: TextStyle(fontSize: 40),
-                                    ),
-                                    title: Text(
-                                      '${forecast.temp2m}°C',
-                                      style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    subtitle: Row(
-                                      children: [
-                                        Icon(Icons.air),
-                                        SizedBox(width: 5),
-                                        Text(
-                                          '${forecast.windDirection} ${forecast.windSpeed} m/s',
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                      ],
-                                    ),
-                                    trailing: Text(
-                                      // Mostrar la hora a la derecha
-                                      getFormattedHour(
-                                          initTime, forecast.timepoint ?? 0),
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    onTap: () => onForecastTap(
-                                        forecast), // Callback para mostrar Snackbar
-                                  );
-                                }).toList(),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                WeatherHeader(forecast: forecastData[0]),
+                WeatherList(
+                  groupedForecasts: groupedForecasts,
+                  initTime: initTime,
+                  onForecastTap: onForecastTap,
                 ),
               ],
             );
