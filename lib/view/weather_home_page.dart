@@ -17,7 +17,7 @@ class WeatherHomePage extends StatefulWidget {
 class _WeatherHomePageState extends State<WeatherHomePage> {
   static const double latitude = 43.3619292;
   static const double longitude = -8.453883;
-  String? initTime; // Guardamos la fecha de inicio aquí
+  String? initTime;
   bool _forceError = false;
 
   Future<List<WeatherForecast>> fetchWeatherData() async {
@@ -31,7 +31,7 @@ class _WeatherHomePageState extends State<WeatherHomePage> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       initTime =
-      data['init']; // Guardamos el init (fecha de inicio del pronóstico)
+      data['init'];
       return (data['dataseries'] as List)
           .map((json) => WeatherForecast.fromJson(json))
           .toList();

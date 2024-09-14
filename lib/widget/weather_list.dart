@@ -50,7 +50,8 @@ class WeatherList extends StatelessWidget {
                             Icon(Icons.air),
                             SizedBox(width: 5),
                             Text(
-                              '${forecast.windDirection} ${forecast.windSpeed} m/s',
+                              '${forecast.windDirection} ${forecast
+                                  .windSpeed} m/s',
                               style: TextStyle(fontSize: 16),
                             ),
                           ],
