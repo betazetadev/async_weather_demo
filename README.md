@@ -66,12 +66,11 @@ This app uses the **7Timer API** to fetch weather forecast data.
 - Example API call:
     ```
     https://www.7timer.info/bin/astro.php?lon=-8.453883&lat=43.3619292&ac=0&unit=metric&output=json&tzshift=0
-    
     ```
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the GNU GPL v3 License. See `LICENSE` for more information.
 
 ## Contact
 
